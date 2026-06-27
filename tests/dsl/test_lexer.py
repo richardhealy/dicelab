@@ -20,24 +20,40 @@ def test_simple_dice() -> None:
 def test_keywords_before_d() -> None:
     # 'dh', 'dl', 'dis' must not be split into D + ...
     assert types("4d6dl1") == [
-        TokenType.NUMBER, TokenType.D, TokenType.NUMBER,
-        TokenType.DL, TokenType.NUMBER, TokenType.EOF,
+        TokenType.NUMBER,
+        TokenType.D,
+        TokenType.NUMBER,
+        TokenType.DL,
+        TokenType.NUMBER,
+        TokenType.EOF,
     ]
     assert types("1d20 dis") == [
-        TokenType.NUMBER, TokenType.D, TokenType.NUMBER,
-        TokenType.DIS, TokenType.EOF,
+        TokenType.NUMBER,
+        TokenType.D,
+        TokenType.NUMBER,
+        TokenType.DIS,
+        TokenType.EOF,
     ]
 
 
 def test_comparisons_and_ops() -> None:
     assert types("6d10>=7") == [
-        TokenType.NUMBER, TokenType.D, TokenType.NUMBER,
-        TokenType.GE, TokenType.NUMBER, TokenType.EOF,
+        TokenType.NUMBER,
+        TokenType.D,
+        TokenType.NUMBER,
+        TokenType.GE,
+        TokenType.NUMBER,
+        TokenType.EOF,
     ]
     assert types("1d6 + 2 * 3") == [
-        TokenType.NUMBER, TokenType.D, TokenType.NUMBER,
-        TokenType.PLUS, TokenType.NUMBER, TokenType.STAR,
-        TokenType.NUMBER, TokenType.EOF,
+        TokenType.NUMBER,
+        TokenType.D,
+        TokenType.NUMBER,
+        TokenType.PLUS,
+        TokenType.NUMBER,
+        TokenType.STAR,
+        TokenType.NUMBER,
+        TokenType.EOF,
     ]
 
 
