@@ -15,9 +15,7 @@ def configure_logging() -> None:
                     "format": '{"level":"%(levelname)s","logger":"%(name)s","msg":"%(message)s"}'
                 }
             },
-            "handlers": {
-                "default": {"class": "logging.StreamHandler", "formatter": "json"}
-            },
+            "handlers": {"default": {"class": "logging.StreamHandler", "formatter": "json"}},
             "root": {"handlers": ["default"], "level": "INFO"},
         }
     )

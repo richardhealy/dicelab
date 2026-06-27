@@ -40,9 +40,7 @@ def validate(req: ValidateRequest) -> ValidateResponse:
         node = parse(req.expression)
     except (ParseError, LexError) as exc:
         return ValidateResponse(valid=False, normalized=None, ast=None, error=str(exc))
-    return ValidateResponse(
-        valid=True, normalized=unparse(node), ast=ast_to_dict(node), error=None
-    )
+    return ValidateResponse(valid=True, normalized=unparse(node), ast=ast_to_dict(node), error=None)
 
 
 @router.post("/roll", response_model=RollResult)
