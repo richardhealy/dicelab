@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Any, Literal
 
 KeepWhich = Literal["h", "l"]
 Compare = Literal[">=", "<="]
@@ -101,3 +101,41 @@ def unparse(node: Node) -> str:
             return f"{unparse(left)} {op} {unparse(right)}"
         case UnaryOp(op, operand):
             return f"{op}{unparse(operand)}"
+
+
+def _modifier_to_dict(m: Modifier) -> dict[str, Any]:
+    match m:
+        case Keep(which, k):
+            return {"type": "keep", "which": which, "k": k}
+        case Drop(which, k):
+            return {"type": "drop", "which": which, "k": k}
+        case Explode():
+            return {"type": "explode"}
+        case Reroll(value):
+            return {"type": "reroll", "value": value}
+        case SuccessPool(compare, threshold):
+            return {"type": "pool", "compare": compare, "threshold": threshold}
+        case Advantage(kind):
+            return {"type": "advantage", "kind": kind}
+
+
+def ast_to_dict(node: Node) -> dict[str, Any]:
+    match node:
+        case Constant(value):
+            return {"type": "constant", "value": value}
+        case DiceTerm(count, sides, modifiers):
+            return {
+                "type": "dice",
+                "count": count,
+                "sides": sides,
+                "modifiers": [_modifier_to_dict(m) for m in modifiers],
+            }
+        case BinOp(op, left, right):
+            return {
+                "type": "binop",
+                "op": op,
+                "left": ast_to_dict(left),
+                "right": ast_to_dict(right),
+            }
+        case UnaryOp(op, operand):
+            return {"type": "unaryop", "op": op, "operand": ast_to_dict(operand)}
