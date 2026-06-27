@@ -1,6 +1,7 @@
 import pytest
 
-from dicelab.engine.distribution import Distribution
+from dicelab.dsl.parser import parse
+from dicelab.engine.distribution import Distribution, distribute
 
 
 def test_uniform_die_mean() -> None:
@@ -38,3 +39,47 @@ def test_from_pairs_fills_gaps() -> None:
     d = Distribution.from_pairs({1: 0.5, 3: 0.5})
     assert list(d.outcomes()) == [1, 2, 3]
     assert dict(d.items()) == {1: 0.5, 3: 0.5}
+
+
+def test_distribute_d6_uniform() -> None:
+    res = distribute(parse("1d6"))
+    assert res.method == "exact"
+    assert sum(res.pmf.values()) == pytest.approx(1.0)
+    assert res.mean == pytest.approx(3.5)
+    assert all(v == pytest.approx(1 / 6) for v in res.pmf.values())
+
+
+def test_distribute_2d6_peak() -> None:
+    res = distribute(parse("2d6"))
+    assert res.pmf[7] == pytest.approx(6 / 36)
+    assert res.mean == pytest.approx(7.0)
+
+
+def test_distribute_keep_drop_sums_to_one() -> None:
+    res = distribute(parse("4d6dl1"))
+    assert res.method == "exact"
+    assert sum(res.pmf.values()) == pytest.approx(1.0)
+    assert min(res.pmf) == 3 and max(res.pmf) == 18
+
+
+def test_distribute_pool_binomial() -> None:
+    res = distribute(parse("2d6>=5"))  # p = 2/6 per die
+    assert res.pmf[0] == pytest.approx((4 / 6) ** 2)
+    assert res.pmf[2] == pytest.approx((2 / 6) ** 2)
+    assert sum(res.pmf.values()) == pytest.approx(1.0)
+
+
+def test_distribute_explode_sums_to_one() -> None:
+    res = distribute(parse("1d6!"))
+    assert res.method == "exact"
+    assert sum(res.pmf.values()) == pytest.approx(1.0, abs=1e-9)
+    # mean of an exploding d6 = 3.5 * 6/5 = 4.2
+    assert res.mean == pytest.approx(4.2, abs=1e-6)
+
+
+def test_distribute_reroll_once() -> None:
+    res = distribute(parse("1d6r1"))
+    # P(1) = (1/6)*(1/6); P(2..6) = 1/6 + (1/6)(1/6)
+    assert res.pmf[1] == pytest.approx(1 / 36)
+    assert res.pmf[2] == pytest.approx(1 / 6 + 1 / 36)
+    assert sum(res.pmf.values()) == pytest.approx(1.0)
