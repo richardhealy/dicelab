@@ -1,5 +1,6 @@
-# Local-only reference doc
+# Local-only reference docs (kept out of the published repo)
 spec.md
+docs/superpowers/
 
 # Python
 __pycache__/
