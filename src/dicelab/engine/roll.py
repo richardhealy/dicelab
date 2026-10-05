@@ -9,9 +9,7 @@ from dicelab.dsl.ast import (
     BinOp,
     Constant,
     DiceTerm,
-    Drop,
     Explode,
-    Keep,
     Node,
     Reroll,
     SuccessPool,
@@ -19,6 +17,7 @@ from dicelab.dsl.ast import (
     unparse,
 )
 from dicelab.dsl.normalize import normalize
+from dicelab.engine.keepdrop import kept_indices
 from dicelab.engine.result import (
     DiceTermResult,
     RollResult,
@@ -109,15 +108,7 @@ def _pool_hit(face: int, pool: SuccessPool) -> bool:
 
 
 def _apply_keep_drop(faces: list[int], term: DiceTerm) -> tuple[list[int], list[int]]:
-    order = sorted(range(len(faces)), key=lambda i: faces[i])  # indices ascending by value
-    keep_idx = set(range(len(faces)))
-    for mod in term.modifiers:
-        if isinstance(mod, Keep):
-            chosen = order[-mod.k :] if mod.which == "h" else order[: mod.k]
-            keep_idx &= set(chosen)
-        elif isinstance(mod, Drop):
-            chosen = order[-mod.k :] if mod.which == "h" else order[: mod.k]
-            keep_idx -= set(chosen)
+    keep_idx = kept_indices(faces, term.modifiers)
     kept = [faces[i] for i in range(len(faces)) if i in keep_idx]
     dropped = [faces[i] for i in range(len(faces)) if i not in keep_idx]
     return kept, dropped
