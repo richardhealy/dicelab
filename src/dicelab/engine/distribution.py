@@ -28,6 +28,7 @@ from dicelab.dsl.ast import (
     unparse,
 )
 from dicelab.dsl.normalize import normalize
+from dicelab.engine.keepdrop import kept_indices
 from dicelab.engine.result import (
     DistributionResult,
     SuccessLadder,
@@ -149,18 +150,6 @@ def _explode_pmf(face_pmf: dict[int, float], sides: int) -> dict[int, float]:
     return pmf
 
 
-def _apply_keep_drop_sorted(values: tuple[int, ...], term: DiceTerm) -> list[int]:
-    keep = list(values)  # ascending
-    for mod in term.modifiers:
-        if isinstance(mod, Keep):
-            keep = sorted(keep)
-            keep = keep[-mod.k :] if mod.which == "h" else keep[: mod.k]
-        elif isinstance(mod, Drop):
-            keep = sorted(keep)
-            keep = keep[: len(keep) - mod.k] if mod.which == "h" else keep[mod.k :]
-    return keep
-
-
 def _pool_hit(face: int, pool: SuccessPool) -> bool:
     return face >= pool.threshold if pool.compare == ">=" else face <= pool.threshold
 
@@ -200,7 +189,7 @@ def _keep_drop_distribution(term: DiceTerm, face_pmf: dict[int, float]) -> Distr
         for c in counts.values():
             multiplicity //= factorial(c)
         prob = multiplicity * prod(face_pmf[f] ** c for f, c in counts.items())
-        kept_sum = sum(_apply_keep_drop_sorted(combo, term))
+        kept_sum = sum(combo[i] for i in kept_indices(combo, term.modifiers))
         pairs[kept_sum] = pairs.get(kept_sum, 0.0) + prob
     return Distribution.from_pairs(pairs)
 
