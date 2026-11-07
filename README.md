@@ -2,7 +2,7 @@
 
 A dice-notation service that both **rolls** and **reasons**: parse a dice DSL,
 simulate seeded rolls, and compute the *exact* probability distribution of any
-expression — behind a fully typed, self-documenting API.
+expression, behind a fully typed, self-documenting API.
 
 ## Why Python
 
@@ -32,6 +32,14 @@ uv run dicelab distribution 2d6
 `NdM`, keep/drop highest/lowest (`kh`/`kl`/`dh`/`dl`), `+ - *` and parentheses,
 advantage/disadvantage (`adv`/`dis`), exploding (`!`), reroll-once (`rX`), and
 success pools (`>=`/`<=`).
+
+Keep/drop modifiers apply left to right, each to the dice the previous one kept,
+so `4d6kh3kl1` is the lowest of the three highest dice. `kh0` keeps nothing,
+`dh0` drops nothing, and a count larger than the pool keeps or drops all of it.
+Rolls and exact distributions share this one implementation, so they always agree.
+
+Project status and known issues are in [PROGRESS.md](PROGRESS.md); changes are in
+[CHANGELOG.md](CHANGELOG.md).
 
 ## Endpoints
 
