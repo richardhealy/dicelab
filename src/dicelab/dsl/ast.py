@@ -90,7 +90,37 @@ def _unparse_modifier(m: Modifier) -> str:
             return kind
 
 
+# Binding strength, matching the parser: + and - bind loosest, then *, then
+# unary minus, then dice terms and constants.
+_PREC_SUM = 1
+_PREC_PRODUCT = 2
+_PREC_NEGATION = 3
+_PREC_ATOM = 4
+
+
+def _precedence(node: Node) -> int:
+    match node:
+        case BinOp(op, _, _):
+            return _PREC_PRODUCT if op == "*" else _PREC_SUM
+        case UnaryOp():
+            return _PREC_NEGATION
+        case Constant() | DiceTerm():
+            return _PREC_ATOM
+
+
+def _unparse_operand(node: Node, min_precedence: int) -> str:
+    text = unparse(node)
+    return f"({text})" if _precedence(node) < min_precedence else text
+
+
 def unparse(node: Node) -> str:
+    """Render a node as dice notation that parses back to the same tree.
+
+    Parentheses are added only where the tree needs them: around a looser
+    operation inside a tighter one (``(1d6 + 2) * 3``), and around a right
+    operand of the same precedence, because the parser groups ``+``, ``-``
+    and ``*`` from the left (``2 - (3 - 4)``).
+    """
     match node:
         case Constant(value):
             return str(value)
@@ -98,9 +128,10 @@ def unparse(node: Node) -> str:
             mods = "".join(_unparse_modifier(m) for m in modifiers)
             return f"{count}d{sides}{mods}"
         case BinOp(op, left, right):
-            return f"{unparse(left)} {op} {unparse(right)}"
+            prec = _precedence(node)
+            return f"{_unparse_operand(left, prec)} {op} {_unparse_operand(right, prec + 1)}"
         case UnaryOp(op, operand):
-            return f"{op}{unparse(operand)}"
+            return f"{op}{_unparse_operand(operand, _PREC_NEGATION)}"
 
 
 def _modifier_to_dict(m: Modifier) -> dict[str, Any]:

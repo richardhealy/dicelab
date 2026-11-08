@@ -1,5 +1,35 @@
 # Changelog
 
+## 2026-11-08
+
+### Fixed
+
+- `unparse` dropped every pair of parentheses, so the expression the service
+  echoed back could mean something else. The rolled total and the
+  distribution were right (the parsed tree was right), but the text was not:
+  - `(1d6+2)*3` came back as `1d6 + 2 * 3`. With seed 42, `/roll` gave 24
+    for the original and 12 for the echoed text.
+  - `2-(3-4)` came back as `2 - 3 - 4` (3 against -5), and `-(1d6+2)` as
+    `-1d6 + 2`.
+
+  This affected `expression` from `/roll` and `/distribution`, `normalized`
+  from `/validate` and the CLI's `dicelab validate`. `unparse` now adds
+  parentheses where the tree needs them: around a looser operation inside a
+  tighter one, and around a right operand of the same precedence, because the
+  parser groups `+`, `-` and `*` from the left. Expressions that never needed
+  parentheses (`4d6dl1 + 2`, `1d20 + 5`) are echoed as before.
+
+### Added
+
+- `tests/dsl/test_ast.py`: unparse cases where parentheses must stay and
+  where they should be dropped.
+- `tests/dsl/test_ast_roundtrip.py`: a Hypothesis test that generates parsed
+  trees (sums, differences, products, negation, dice with keep/drop) and
+  checks that `parse(unparse(tree)) == tree`.
+- `tests/api/test_expression_echo.py`: sending back the echoed expression
+  gives the same AST from `/validate`, the same seeded total from `/roll`
+  and the same distribution from `/distribution`.
+
 ## 2026-10-06
 
 ### Fixed
