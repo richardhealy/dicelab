@@ -1,13 +1,13 @@
 # Progress
 
-Last updated: 2026-10-06
+Last updated: 2026-11-08
 
 ## Milestones
 
 | #  | Milestone               | Status | Notes |
 |----|-------------------------|--------|-------|
 | M0 | Project scaffold        | Done   | uv, `src/` layout, ruff, `mypy --strict`, pre-commit, GitHub Actions CI |
-| M1 | Lexer + parser          | Done   | Typed AST, round-trip property test (paren-free expressions only, see known issues) |
+| M1 | Lexer + parser          | Done   | Typed AST; round-trip property tests over paren-free strings and over generated trees that need parentheses |
 | M2 | Roll evaluator          | Done   | Seeded rolls, kept/dropped dice, `RollResult` |
 | M3 | Exact distribution      | Done   | Convolution, keep/drop enumeration, pools, explode, reroll; falls back to sampling with `method: "sampled"` |
 | M4 | Outcome + successLadder | Done   | `successLadder` maps a total to an `outcome` |
@@ -26,25 +26,30 @@ Last updated: 2026-10-06
 
 ## Recent changes
 
+- 2026-11-08: `unparse` keeps the parentheses a tree needs, so the
+  `expression` echoed by `/roll` and `/distribution` and `normalized` from
+  `/validate` parse back to the expression that was sent. See CHANGELOG.md.
 - 2026-10-06: keep/drop now behaves the same in the roll and distribution
   engines (one shared implementation). See CHANGELOG.md.
 
 ## Known issues
 
-Found on 2026-10-06 and not yet fixed:
+Not yet fixed:
 
-- `unparse` drops parentheses, so the `expression` echoed by `/roll` and
-  `/distribution`, and `normalized` from `/validate`, can mean something else.
-  `(1d6+2)*3` comes back as `1d6 + 2 * 3`, and `2-(3-4)` as `2 - 3 - 4`. The
-  totals are right (the AST is right); re-submitting the echoed string is not.
-- `0d6` rolls 0 but its distribution is that of `1d6` (mean 3.5), because the
+- (found 2026-10-06) `0d6` rolls 0 but its distribution is that of `1d6` (mean 3.5), because the
   convolution loop starts from one die.
-- `1d0` returns HTTP 500 from `/roll` and `/distribution` instead of a 422.
-  `/validate` accepts it.
+- (found 2026-10-06) `1d0` returns HTTP 500 from `/roll` and `/distribution`
+  instead of a 422. `/validate` accepts it.
+- (found 2026-11-08) Trailing advantage in a longer expression echoes as text
+  that does not parse. `1d20+5 adv` is accepted and rolled correctly, but the
+  echoed `expression` (and `normalized` from `/validate`) is `1d20adv + 5`,
+  and sending that back fails with "Unexpected PLUS". `unparse` writes `adv`
+  and `dis` straight after the dice, and the parser only reads them at the end
+  of the whole expression. A bare `1d20adv` is fine.
 
 ## Next
 
-- Fix the three known issues above, each with a regression test.
+- Fix the known issues above, each with a regression test.
 - Tag a first release (M7).
 - Stretch goals from the spec: a `compare` endpoint, distribution caching,
   publishing the engine to PyPI.
