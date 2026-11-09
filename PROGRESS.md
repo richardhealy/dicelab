@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-11-08
+Last updated: 2026-11-09
 
 ## Milestones
 
@@ -26,6 +26,10 @@ Last updated: 2026-11-08
 
 ## Recent changes
 
+- 2026-11-09: the exact distribution of a term with no dice is a total of 0,
+  as the roll engine already gave, instead of the distribution of one die
+  (`0d6` reported mean 3.5). A new property test checks that every seeded
+  roll total is an outcome in the distribution. See CHANGELOG.md.
 - 2026-11-08: `unparse` keeps the parentheses a tree needs, so the
   `expression` echoed by `/roll` and `/distribution` and `normalized` from
   `/validate` parse back to the expression that was sent. See CHANGELOG.md.
@@ -36,10 +40,10 @@ Last updated: 2026-11-08
 
 Not yet fixed:
 
-- (found 2026-10-06) `0d6` rolls 0 but its distribution is that of `1d6` (mean 3.5), because the
-  convolution loop starts from one die.
 - (found 2026-10-06) `1d0` returns HTTP 500 from `/roll` and `/distribution`
-  instead of a 422. `/validate` accepts it.
+  instead of a 422. `/validate` accepts it. `0d0` is the same on
+  `/distribution` (500), though `/roll` gives a total of 0 (checked
+  2026-11-09).
 - (found 2026-11-08) Trailing advantage in a longer expression echoes as text
   that does not parse. `1d20+5 adv` is accepted and rolled correctly, but the
   echoed `expression` (and `normalized` from `/validate`) is `1d20adv + 5`,

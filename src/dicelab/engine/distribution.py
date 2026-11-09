@@ -169,9 +169,10 @@ def _term_distribution(term: DiceTerm) -> Distribution:
     if any(isinstance(m, (Keep, Drop)) for m in term.modifiers):
         return _keep_drop_distribution(term, face_pmf)
 
+    # Start from "no dice, total 0" so that 0dN is always 0, as it rolls.
     single = Distribution.from_pairs(face_pmf)
-    result = single
-    for _ in range(term.count - 1):
+    result = Distribution.constant(0)
+    for _ in range(term.count):
         result = result.convolve(single)
     return result
 

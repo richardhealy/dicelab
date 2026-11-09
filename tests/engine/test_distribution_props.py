@@ -36,3 +36,20 @@ def test_pmf_nonnegative_and_supported() -> None:
     res = distribute(parse("3d8 + 2"))
     assert all(p >= 0 for p in res.pmf.values())
     assert min(res.pmf) == 5 and max(res.pmf) == 26
+
+
+_terms = st.builds(
+    lambda n, s, mod: f"{n}d{s}{mod}",
+    st.integers(min_value=0, max_value=4),
+    st.integers(min_value=2, max_value=8),
+    st.sampled_from(["", "!", "r1", "kh1", "dl1", ">=4"]),
+)
+
+
+@settings(max_examples=60, suppress_health_check=[HealthCheck.too_slow])
+@given(_terms, st.integers(min_value=0, max_value=2**32 - 1))
+def test_every_roll_total_is_in_the_distribution(expr: str, seed: int) -> None:
+    """The roll and distribution engines agree on what totals are possible."""
+    node = parse(expr)
+    pmf = distribute(node).pmf
+    assert roll(node, seed=seed).total in pmf

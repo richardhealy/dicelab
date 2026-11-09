@@ -83,3 +83,20 @@ def test_distribute_reroll_once() -> None:
     assert res.pmf[1] == pytest.approx(1 / 36)
     assert res.pmf[2] == pytest.approx(1 / 6 + 1 / 36)
     assert sum(res.pmf.values()) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("expr", ["0d6", "0d20", "0d1", "0d6!", "0d6r1", "0d6kh1", "0d6>=4"])
+def test_distribute_zero_dice_is_always_zero(expr: str) -> None:
+    # Rolling no dice always totals 0, whatever the sides or modifiers.
+    res = distribute(parse(expr))
+    assert res.method == "exact"
+    assert res.pmf == {0: pytest.approx(1.0)}
+    assert res.mean == pytest.approx(0.0)
+    assert res.variance == pytest.approx(0.0)
+    assert set(res.percentiles.values()) == {0}
+
+
+def test_distribute_zero_dice_inside_an_expression() -> None:
+    assert distribute(parse("2 + 0d6")).pmf == {2: pytest.approx(1.0)}
+    assert distribute(parse("0d6 * 3")).pmf == {0: pytest.approx(1.0)}
+    assert distribute(parse("1d6 + 0d6")).pmf == distribute(parse("1d6")).pmf
