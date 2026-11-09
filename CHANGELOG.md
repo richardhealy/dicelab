@@ -1,5 +1,29 @@
 # Changelog
 
+## 2026-11-09
+
+### Fixed
+
+- The exact distribution of a term with no dice was wrong. `0d6` always rolls
+  0, but `/distribution` reported the distribution of `1d6` (mean 3.5), so the
+  two engines disagreed about the same expression. The same happened inside
+  larger expressions and with explode or reroll: `2+0d6` gave mean 5.5
+  (it always totals 2) and `0d6!` gave the exploding-d6 curve (mean 4.2).
+  The convolution loop started from one die and added `count - 1` more; it
+  now starts from a total of 0 and adds `count` dice, so `0dN` is always 0.
+  Keep/drop terms (`0d6kh1`) and success pools (`0d6>=4`) were already right.
+
+### Added
+
+- `tests/engine/test_distribution.py`: zero-dice terms, alone and inside an
+  expression, with and without modifiers.
+- `tests/engine/test_distribution_props.py`: a Hypothesis test that rolls
+  generated terms (0 to 4 dice, with explode, reroll, keep/drop or a success
+  pool) and checks that every seeded roll total is an outcome in the exact
+  distribution.
+- `tests/api/test_distribution_route.py`: `/distribution` and `/roll` agree
+  on `0d6`.
+
 ## 2026-11-08
 
 ### Fixed
